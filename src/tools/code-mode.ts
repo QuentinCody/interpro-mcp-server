@@ -23,6 +23,8 @@ export function registerCodeMode(
 
     const executeTool = createExecuteTool({
         prefix: "interpro",
+        // Verifiable provenance: interpro_execute results carry a _meta.citation.
+        source: { id: "interpro", name: "InterPro", url: "https://www.ebi.ac.uk/interpro", license: "CC0 1.0" },
         catalog: interproCatalog,
         apiFetch,
         doNamespace: env.INTERPRO_DATA_DO,
