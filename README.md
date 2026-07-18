@@ -10,7 +10,7 @@ MCP server for the EBI InterPro REST API — protein families, domains, and func
 
 ## Tools (Code Mode only)
 
-- `interpro_search` — discover endpoints from the curated catalog (13 endpoints across `entry`, `protein`, `structure`, `taxonomy`, `proteome`, `set`, `search` categories)
+- `interpro_search` — discover endpoints from the curated catalog (14 endpoints across `entry`, `protein`, `structure`, `taxonomy`, `proteome`, `set`, `search` categories)
 - `interpro_execute` — run sandboxed JavaScript against the InterPro API via `api.get()`
 - `interpro_query_data` — SQL over staged responses
 - `interpro_get_schema` — inspect staged-dataset schemas
