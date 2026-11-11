@@ -1,5 +1,8 @@
 import type { ApiFetchFn } from "@bio-mcp/shared/codemode/catalog";
 import { interproFetch } from "./http";
+import { fetchMatches } from "./matches";
+import { readResponseBytes, decodeResponseText } from "@bio-mcp/shared/http/response-reader";
+import { interproCompleteness } from "./completeness";
 
 /**
  * Normalize an InterPro API path to always end with a trailing slash
@@ -48,15 +51,15 @@ export function createInterproApiFetch(): ApiFetchFn {
     return async (request) => {
         const path = withTrailingSlash(request.path);
 
-        const response = await interproFetch(path, request.params);
+        const isMatches = /^\/matches(?:\/|$)/.test(request.path);
+        if (!isMatches && request.method !== "GET") throw new Error("InterPro record routes support GET only");
+        const response = isMatches
+            ? await fetchMatches(request)
+            : await interproFetch(path, request.params);
 
+        const text = decodeResponseText(await readResponseBytes(response, {label:"InterPro",maxBytes:8 * 1024 * 1024,timeoutMs:30_000}), "InterPro");
         if (!response.ok) {
-            let errorBody: string;
-            try {
-                errorBody = await response.text();
-            } catch {
-                errorBody = response.statusText;
-            }
+            const errorBody = text || response.statusText;
             const error = new Error(`HTTP ${response.status}: ${errorBody.slice(0, 200)}`) as Error & {
                 status: number;
                 data: unknown;
@@ -70,17 +73,18 @@ export function createInterproApiFetch(): ApiFetchFn {
 
         const contentType = response.headers.get("content-type") || "";
         if (!contentType.includes("json")) {
-            const text = await response.text();
             return {
                 status: response.status,
                 data: attachInterproVersion({ text }, interproVersion),
             };
         }
 
-        const data = await response.json();
+        const data = JSON.parse(text.replace(/^\uFEFF/, ""));
+        const completeness = interproCompleteness(data);
         return {
             status: response.status,
             data: attachInterproVersion(data, interproVersion),
+            ...(completeness ? {completeness} : {}),
         };
     };
 }

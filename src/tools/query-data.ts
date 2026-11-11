@@ -2,6 +2,8 @@ import type { McpServer } from "@bio-mcp/shared/mcp";
 import { z } from "zod";
 import { createQueryDataHandler } from "@bio-mcp/shared/staging/utils";
 
+import { interproResponse } from "../lib/tool-result";
+
 interface QueryEnv {
     INTERPRO_DATA_DO?: unknown;
 }
@@ -9,8 +11,8 @@ interface QueryEnv {
 export function registerQueryData(server: McpServer, env?: QueryEnv): void {
     const handler = createQueryDataHandler("INTERPRO_DATA_DO", "interpro");
 
-    server.registerTool(
-        "interpro_query_data",
+    for (const name of ["interpro_query_data", "mcp_interpro_query_data"]) server.registerTool(
+        name,
         {
             title: "Query Staged InterPro Data",
             description:
@@ -23,7 +25,7 @@ export function registerQueryData(server: McpServer, env?: QueryEnv): void {
         },
         async (args, extra) => {
             const runtimeEnv = env || (extra as { env?: QueryEnv })?.env || {};
-            return handler(args as Record<string, unknown>, runtimeEnv as Record<string, unknown>);
+            return interproResponse(() => handler(args as Record<string, unknown>, runtimeEnv as Record<string, unknown>), runtimeEnv, name, extra, args);
         },
     );
 }

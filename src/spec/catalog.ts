@@ -1,4 +1,5 @@
 import type { ApiCatalog } from "@bio-mcp/shared/codemode/catalog";
+import { matchesEndpoints, matchesNotes } from "./matches";
 
 /**
  * InterPro REST API catalog.
@@ -24,13 +25,13 @@ import type { ApiCatalog } from "@bio-mcp/shared/codemode/catalog";
 export const interproCatalog: ApiCatalog = {
     name: "InterPro",
     baseUrl: "https://www.ebi.ac.uk/interpro/api",
-    version: "108.0",
+    version: "REST + Matches API",
     auth: "none",
-    endpointCount: 14,
-    notes:
+    endpointCount: 17,
+    notes: matchesNotes +
         "- InterPro unifies ~13 member DBs (Pfam, SMART, PRINTS, PROSITE, CDD, NCBIfam, PANTHER, CATH-Gene3D, SUPERFAMILY, HAMAP, PIRSF, SFLD, AntFam) into one cross-referenced index.\n" +
         "- `{db}` placeholders accept any of these lowercase member-database codes: interpro, pfam, smart, prints, prosite, cdd, ncbifam, panther, cathgene3d, ssf, hamap, pirsf, profile, sfld, antfam. Use `all` to span every member DB.\n" +
-        "- ALL paths require a trailing slash — requesting `/entry/interpro` (without the final `/`) returns 301 then 404. The api-adapter normalizes this for you.\n" +
+        "- Record API paths require a trailing slash; the adapter normalizes them. Matches API paths use their separate routing.\n" +
         "- Paginate via `?page_size=200` (max 200) plus cursor-based `?cursor=...` via the `next` field returned in responses. Default to `page_size=200` for list endpoints to minimize round-trips.\n" +
         "- Full-text search: append `?search=<term>` to any list endpoint (e.g., `/entry/all/?search=kinase%20domain` matches across all member DBs — canonical way to search).\n" +
         "- Responses include an `interpro-version` HTTP response header — the adapter surfaces this as `_meta.interpro_version` on object responses.\n" +
@@ -38,6 +39,7 @@ export const interproCatalog: ApiCatalog = {
         "- UniProt accessions in `/protein/uniprot/{id}/` must be canonical (no isoform suffix).\n" +
         "- Response bodies are always JSON when `Accept: application/json` is sent (the adapter does this).",
     endpoints: [
+        ...matchesEndpoints,
         // ── entry ─────────────────────────────────────────────────────────
         {
             method: "GET",
